@@ -6,6 +6,7 @@ package frc.robot.subsystems;
 
 import java.util.function.DoubleSupplier;
 
+import com.ctre.phoenix6.StatusSignalCollection;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -49,9 +50,25 @@ public class Drivetrain extends SwerveDrivetrain<TalonFX, TalonFX, CANcoder> imp
         translationPID = new PIDController(DrivetrainConstants.translationP, DrivetrainConstants.translationI, DrivetrainConstants.translationD);
         headingPID = new PIDController(DrivetrainConstants.headingP, DrivetrainConstants.headingI, DrivetrainConstants.headingD);
         headingPID.enableContinuousInput(-Math.PI, Math.PI);
+
+        setOdometryFrequency(250);
     }
 
-    public double calcAimingPID(double targetHeading) {
+    private void setOdometryFrequency(double frequency) {
+        StatusSignalCollection signals = new StatusSignalCollection();
+
+        for (var module : getModules()) {
+            signals.addSignals(
+                module.getDriveMotor().getPosition(),
+                module.getEncoder().getAbsolutePosition()
+            );
+        }
+
+        signals.addSignals(getPigeon2().getYaw());
+        signals.setUpdateFrequencyForAll(frequency);
+    }
+
+    private double calcAimingPID(double targetHeading) {
         double power = headingPID.calculate(getRotation2d().getRadians(), targetHeading);
         return MathUtil.clamp(power, -DrivetrainConstants.maxAngularSpeed, DrivetrainConstants.maxAngularSpeed);
     }

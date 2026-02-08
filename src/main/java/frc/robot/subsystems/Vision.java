@@ -9,16 +9,24 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.LimelightHelpers;
 import frc.robot.Utilities;
+import frc.robot.LimelightHelpers.RawFiducial;
 import frc.robot.constants.VisionConstants;
 
 public class Vision extends SubsystemBase {
     public Vision() {}
 
     public Pose2d getPoseEstimate(String cameraID) {
-        Pose2d redEstimate = LimelightHelpers.getBotPose2d_wpiRed(cameraID);
-        Pose2d blueEstimate = LimelightHelpers.getBotPose2d_wpiBlue(cameraID);
+        Pose2d estimate = Utilities.getAlliance() == Alliance.Red ?
+            LimelightHelpers.getBotPose2d_wpiRed(cameraID) :
+            LimelightHelpers.getBotPose2d_wpiBlue(cameraID);
 
-        return Utilities.getAlliance() == Alliance.Red ? redEstimate : blueEstimate;
+        RawFiducial[] rawFiducials = LimelightHelpers.getRawFiducials(cameraID);
+
+        for (RawFiducial rawFiducial : rawFiducials) {
+            if (rawFiducial.ambiguity > 0.7) return null;
+        }
+
+        return estimate;
     }
 
     public Pose2d[] getPoseEstimates() {

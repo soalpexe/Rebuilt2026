@@ -4,6 +4,9 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.constants.ControllerConstants;
@@ -15,12 +18,16 @@ public class RobotContainer {
     private CommandScheduler scheduler;
     private CommandXboxController controller;
 
+    private StructPublisher<Pose2d> robotPosePublisher;
+
     public Drivetrain drivetrain;
     public Vision vision;
 
     public RobotContainer() {
         scheduler = CommandScheduler.getInstance();
         controller = new CommandXboxController(ControllerConstants.controllerID);
+
+        robotPosePublisher = NetworkTableInstance.getDefault().getStructTopic("Robot Pose", Pose2d.struct).publish();
 
         drivetrain = new Drivetrain(
             DrivetrainConstants.drivetrainConfig,
@@ -51,5 +58,7 @@ public class RobotContainer {
     public void periodic() {
         drivetrain.addVisionMeasurements(vision.getPoseEstimates());
         ShotCalculator.updateState(drivetrain.getPose2d(), drivetrain.getSpeeds());
+
+        robotPosePublisher.set(drivetrain.getPose2d());
     }
 }

@@ -14,6 +14,6 @@ public class Utilities {
     }
 
     public static boolean isValidPose(Pose2d pose) {
-        return !pose.equals(new Pose2d()) && pose != null;
+        return pose != null && !pose.equals(new Pose2d());
     }
 }
